@@ -7,10 +7,10 @@ import polars as pl
 # 1. Definimos las columnas que queremos limpiar y de las que sacaremos los únicos
 target_columns = [
     "name", "author", "star_rating", 
-    "num_reviews", "genres", "first_published"
+    "num_reviews", "genres"
 ]
 
-num_columns = ["star_rating", "num_reviews"]  # Sin first_published (es string)
+num_columns = ["star_rating", "num_reviews"] 
 
 # Creamos el acumulador (diccionario de sets vacíos) para no saturar la RAM
 unique_values_accumulator = {col: set() for col in target_columns}
@@ -66,29 +66,6 @@ for i, batch in enumerate(batched_ds):
                     
                     if primer_elemento is not None and primer_elemento != "":
                         lote_unicos.append(primer_elemento)
-
-            elif col == "first_published":
-                # EXTRACCIÓN DE AÑOS: Parsear fechas y extraer solo el año
-                lote_unicos = []
-                for val in df_col[col].to_list():
-                    anio = None
-                    try:
-                        if isinstance(val, str):
-                            # Intenta formato "M/D/YYYY" o "MM/DD/YYYY"
-                            fecha_parts = val.strip().split("/")
-                            if len(fecha_parts) >= 3:
-                                anio = fecha_parts[-1].strip()  # Último elemento es el año
-                            elif len(fecha_parts) == 1 and val.isdigit():
-                                # Si es directamente un año (string numérico)
-                                anio = val.strip()
-                        elif isinstance(val, (int, float)):
-                            # Si ya es un número, convertir a string
-                            anio = str(int(val))
-                    except:
-                        pass
-                    
-                    if anio is not None and anio != "" and anio.isdigit():
-                        lote_unicos.append(anio)
             
             else:
                 # Para otras columnas, extrae los únicos normalmente
