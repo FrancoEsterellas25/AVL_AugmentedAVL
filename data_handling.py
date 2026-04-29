@@ -77,7 +77,7 @@ for i, batch in enumerate(batched_ds):
             if lote_unicos:  # Solo si hay datos
                 unique_values_accumulator[col].update(lote_unicos)
         
-    print(f"Lote {i+1} procesado... Acumulados: genres={len(unique_values_accumulator['genres'])}, first_published={len(unique_values_accumulator['first_published'])}")
+    print(f"Lote {i+1} procesado... Acumulados: genres={len(unique_values_accumulator['genres'])}")
 
 print("\nLectura finalizada. Generando archivos CSV...\n")
 

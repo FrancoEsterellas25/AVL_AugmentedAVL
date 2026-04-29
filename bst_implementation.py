@@ -84,7 +84,6 @@ class BinarySearchTree():
                     self.root = None
 
             # CASO 3: Tiene dos hijos
-            # MOVIDO DENTRO DEL IF y convertido en ELIF del Caso 1
             elif node_to_delete.left != None and node_to_delete.right != None:
                 sucessor = node_to_delete.right
                 while sucessor.left != None:
@@ -93,15 +92,12 @@ class BinarySearchTree():
                 nuevo_nombre = sucessor.name
                 nuevo_valor = sucessor.value
 
-                # Primero podamos el sucesor de su posición original
                 self.borrado_fisico_simple(sucessor)
 
-                # Luego usurpamos su identidad
                 node_to_delete.name = nuevo_nombre
                 node_to_delete.value = nuevo_valor  
 
             # CASO 2: Tiene un solo hijo
-            # Convertido en ELIF para que solo se ejecute si no son los anteriores
             else:
                 hijo = node_to_delete.left if node_to_delete.left else node_to_delete.right
                 
@@ -116,7 +112,6 @@ class BinarySearchTree():
                     hijo.parent = None
 
     def borrado_fisico_simple(self, node):
-        # Determinamos si tiene un hijo (derecho, porque es sucesor)
         hijo = node.right if node.right else None
         
         if node.parent:
@@ -136,31 +131,29 @@ class AVLNode(Node):
     def __init__(self, name, value, right=None, left=None, parent=None):
         super().__init__(name, value, right, left, parent)
         self.height = 1
-        self.balance = 0
         
 class AVL(BinarySearchTree):
     def __init__(self):
         super().__init__()
     
     def get_height(self, node):
-        # Si el nodo no existe (es un espacio vacío)
         if node is None:
             return 0
-        
-        # Si existe, simplemente devolvemos el valor que tiene guardado
-        # Este acceso es instantáneo: O(1)
         return node.height
     
-    def rotate_right(self, y):
-        # Definimos los protagonistas
-        x = y.left
-        T2 = x.right # El subárbol que cambiará de padre
+    # FIX: usa get_height (O(1)) en vez de height_recursive (O(n))
+    def get_balance(self, nodo):
+        if nodo is None:
+            return 0
+        return self.get_height(nodo.left) - self.get_height(nodo.right)
 
-        # Paso 1: Reorganizar hijos
+    def rotate_right(self, y):
+        x = y.left
+        T2 = x.right
+
         x.right = y
         y.left = T2
 
-        # Paso 2: Actualizar punteros de padre (Crucial en tu código)
         x.parent = y.parent
         if y.parent:
             if y.parent.left == y:
@@ -168,29 +161,24 @@ class AVL(BinarySearchTree):
             else:
                 y.parent.right = x
         else:
-            self.root = x # Si y era la raíz global, ahora x lo es
+            self.root = x
 
         y.parent = x
         if T2:
             T2.parent = y
 
-        # Paso 3: Actualizar alturas (Primero el que quedó más abajo)
         y.height = 1 + max(self.get_height(y.left), self.get_height(y.right))
         x.height = 1 + max(self.get_height(x.left), self.get_height(x.right))
 
-        # Importante: devolvemos la nueva raíz de este subárbol
         return x
     
     def rotate_left(self, x):
-        # Definimos los protagonistas
         y = x.right
-        T2 = y.left # El subárbol que cambiará de padre
+        T2 = y.left
 
-        # Paso 1: Reorganizar hijos
         y.left = x
         x.right = T2
 
-        # Paso 2: Actualizar punteros de padre
         y.parent = x.parent
         if x.parent:
             if x.parent.left == x:
@@ -204,25 +192,23 @@ class AVL(BinarySearchTree):
         if T2:
             T2.parent = x
 
-        # Paso 3: Actualizar alturas (Primero el que quedó más abajo)
         x.height = 1 + max(self.get_height(x.left), self.get_height(x.right))
         y.height = 1 + max(self.get_height(y.left), self.get_height(y.right))
 
-        # Devolvemos la nueva raíz del subárbol
         return y
             
     def put(self, name, value):
         if self.root is None:
-            # Aquí es donde ocurre el cambio: usamos AVLNode
             self.root = AVLNode(name, value)
         else:
-            self._put(self.root, name, value)
+            # FIX: captura el retorno para que self.root se actualice si hay rotación en la raíz
+            self.root = self._put(self.root, name, value)
+            self.root.parent = None
 
     def _put(self, currentNode, name, value):
-        # --- FASE 1: DESCENSO (Inserción estándar) ---
+        # --- FASE 1: DESCENSO ---
         if value < currentNode.value:
             if currentNode.left:
-                # El padre actualiza su hijo con lo que devuelva la recursión
                 currentNode.left = self._put(currentNode.left, name, value)
             else:
                 currentNode.left = AVLNode(name, value, parent=currentNode)
@@ -232,8 +218,7 @@ class AVL(BinarySearchTree):
             else:
                 currentNode.right = AVLNode(name, value, parent=currentNode)
 
-        # --- FASE 2: ACTUALIZACIÓN (Al regresar de la recursión) ---
-        # Usamos los atributos .height que ya están guardados en los hijos
+        # --- FASE 2: ACTUALIZACIÓN ---
         alt_izq = self.get_height(currentNode.left)
         alt_der = self.get_height(currentNode.right)
         
@@ -241,63 +226,113 @@ class AVL(BinarySearchTree):
         balance = alt_izq - alt_der
 
         # --- FASE 3: REBALANCEO ---
-        # Caso 1: Pesado a la Izquierda (Balance > 1)
         if balance > 1:
-            # Sub-caso: ¿Es línea recta o Zig-Zag?
             if self.get_balance(currentNode.left) >= 0:
-                # Caso Izquierda-Izquierda (Simple)
                 return self.rotate_right(currentNode)
             else:
-                # Caso Izquierda-Derecha (Doble)
                 currentNode.left = self.rotate_left(currentNode.left)
                 return self.rotate_right(currentNode)
 
-        # Caso 2: Pesado a la Derecha (Balance < -1)
         if balance < -1:
             if self.get_balance(currentNode.right) <= 0:
-                # Caso Derecha-Derecha (Simple)
                 return self.rotate_left(currentNode)
             else:
-                # Caso Derecha-Izquierda (Doble)
                 currentNode.right = self.rotate_right(currentNode.right)
                 return self.rotate_left(currentNode)
 
-        # Si no hubo que rotar, devolvemos el nodo tal cual
         return currentNode 
-            
-    def height_recursive(self, nodo):
-        # 1. Si el camino se termina, la altura es 0
-        if nodo is None:
-            return 0
-        
-        # 2. "Baja hasta abajo" por la izquierda
-        altura_izq = self.height_recursive(nodo.left)
-        
-        # 3. "Baja hasta abajo" por la derecha
-        altura_der = self.height_recursive(nodo.right)
-        
-        # 4. La altura del nodo actual es 1 (él mismo) más el camino más largo
-        return 1 + max(altura_izq, altura_der)
 
-    def get_balance(self, nodo):
-        if nodo is None:
-            return 0
-        # El balance es la resta de las alturas de sus dos ramas
-        return self.height_recursive(nodo.left) - self.height_recursive(nodo.right)
-    
-                
+    # Override: eliminar con rebalanceo AVL usando el mismo patrón de retorno que _put
+    def delete_node(self, X_value):
+        self.root = self._delete(self.root, X_value)
+        if self.root:
+            self.root.parent = None
 
+    def _delete(self, node, X_value):
+        # --- FASE 1: DESCENSO (búsqueda) ---
+        if node is None:
+            return None
+
+        if X_value < node.value:
+            node.left = self._delete(node.left, X_value)
+            if node.left:
+                node.left.parent = node
+        elif X_value > node.value:
+            node.right = self._delete(node.right, X_value)
+            if node.right:
+                node.right.parent = node
+        else:
+            # Nodo encontrado — mismos 3 casos del BST
+            if node.is_leaf():
+                return None
+
+            elif node.left is None:
+                succ = node.right
+                succ.parent = node.parent
+                return succ
+
+            elif node.right is None:
+                succ = node.left
+                succ.parent = node.parent
+                return succ
+
+            else:
+                # Caso 3: sucesor in-order (mínimo del subárbol derecho)
+                sucesor = node.right
+                while sucesor.left:
+                    sucesor = sucesor.left
+
+                # Usurpar identidad del sucesor
+                node.name = sucesor.name
+                node.value = sucesor.value
+
+                # Eliminar sucesor del subárbol derecho (recursivo, propaga rebalanceo)
+                node.right = self._delete(node.right, sucesor.value)
+                if node.right:
+                    node.right.parent = node
+
+        # --- FASE 2: ACTUALIZACIÓN ---
+        node.height = 1 + max(self.get_height(node.left), self.get_height(node.right))
+        balance = self.get_balance(node)
+
+        # --- FASE 3: REBALANCEO ---
+        # Pesado a la izquierda
+        if balance > 1:
+            if self.get_height(node.left.left) >= self.get_height(node.left.right):
+                # LL
+                return self.rotate_right(node)
+            else:
+                # LR
+                node.left = self.rotate_left(node.left)
+                return self.rotate_right(node)
+
+        # Pesado a la derecha
+        if balance < -1:
+            if self.get_height(node.right.right) >= self.get_height(node.right.left):
+                # RR
+                return self.rotate_left(node)
+            else:
+                # RL
+                node.right = self.rotate_right(node.right)
+                return self.rotate_left(node)
+
+        return node
+
+
+# --- Test ---
 avl_tree = AVL()
 
 nodes = [['a',5],['b',6], ['c',2],['d',3]]
-
 for node in nodes: 
-    name = node[0]
-    value = node[1]
-    
-    avl_tree.put(name,value)
+    avl_tree.put(node[0], node[1])
 
-print(avl_tree.show_tree())
-if avl_tree.root:
-    print(avl_tree.get_balance(avl_tree.root))
+print("In-order traversal:")
+avl_tree.show_tree()
 
+print("Balance raíz:", avl_tree.get_balance(avl_tree.root))
+print("Raíz:", avl_tree.root.value)
+
+print("\nEliminando nodo 5:")
+avl_tree.delete_node(5)
+avl_tree.show_tree()
+print("Balance raíz post-delete:", avl_tree.get_balance(avl_tree.root))
