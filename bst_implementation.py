@@ -317,22 +317,3 @@ class AVL(BinarySearchTree):
                 return self.rotate_left(node)
 
         return node
-
-
-# --- Test ---
-avl_tree = AVL()
-
-nodes = [['a',5],['b',6], ['c',2],['d',3]]
-for node in nodes: 
-    avl_tree.put(node[0], node[1])
-
-print("In-order traversal:")
-avl_tree.show_tree()
-
-print("Balance raíz:", avl_tree.get_balance(avl_tree.root))
-print("Raíz:", avl_tree.root.value)
-
-print("\nEliminando nodo 5:")
-avl_tree.delete_node(5)
-avl_tree.show_tree()
-print("Balance raíz post-delete:", avl_tree.get_balance(avl_tree.root))
