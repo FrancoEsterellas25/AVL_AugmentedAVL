@@ -125,6 +125,27 @@ class BinarySearchTree():
             self.root = hijo
             if hijo:
                 hijo.parent = None
+                
+    def recursive_search_with_lims(self, currentNode, min_limit, max_limit, result):
+        if currentNode is None:
+            return
+
+        lower_ok = min_limit is None or currentNode.value > min_limit
+        upper_ok = max_limit is None or currentNode.value < max_limit
+
+        if lower_ok:
+            self.recursive_search_with_lims(currentNode.left, min_limit, max_limit, result)
+
+        if lower_ok and upper_ok:
+            result.append(currentNode)
+
+        if upper_ok:
+            self.recursive_search_with_lims(currentNode.right, min_limit, max_limit, result)
+
+    def searching_with_lims(self, min_limit=None, max_limit=None):
+        result = []
+        self.recursive_search_with_lims(self.root, min_limit, max_limit, result)
+        return result
 
 
 class AVLNode(Node):

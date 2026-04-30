@@ -91,6 +91,8 @@ for col in target_columns:
         print(f"⚠️  ADVERTENCIA: {col}_unicos.csv estaría vacío. Saltando...")
         continue
     
+    valores_unicos.sort()
+    
     # Crear DataFrame con valores únicos e IDs secuenciales
     df_final = pl.DataFrame({
         "id": list(range(1, len(valores_unicos) + 1)),
