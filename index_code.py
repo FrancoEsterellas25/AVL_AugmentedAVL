@@ -3,23 +3,26 @@ from datasets import load_dataset
 import pandas as pd
 
 
-# 1. Cargamos los mapeos directamente con Polars (más rápido que Pandas)
 def get_map(file_path, col_name):
-        # Leemos el CSV y creamos el diccionario { nombre: id }
-        temp_df = pl.read_csv(file_path)
-        return dict(zip(temp_df[col_name], temp_df['id']))
+    # 1. Leemos el CSV
+    temp_df = pl.read_csv(file_path)
+    
+    if col_name == "author":
+        temp_df = temp_df.with_columns(
+            pl.col(col_name).cast(pl.String).str.strip_chars('[]" ')
+        )
+    
+    return dict(zip(temp_df[col_name], temp_df['id']))
+
 maps = {
-        'name': get_map("name_unicos.csv", "name"),
-        'author': get_map("author_unicos.csv", "author"),
-        'star_rating': get_map("star_rating_unicos.csv", "star_rating"),
-        'num_reviews': get_map("num_reviews_unicos.csv", "num_reviews"),
-        'genres': get_map("genres_unicos.csv", "genres")
-    }
+    'name': get_map("name_unicos.csv", "name"),
+    'author': get_map("author_unicos.csv", "author"),
+    'star_rating': get_map("star_rating_unicos.csv", "star_rating"),
+    'num_reviews': get_map("num_reviews_unicos.csv", "num_reviews"),
+    'genres': get_map("genres_unicos.csv", "genres")
+}
 
 def global_function(CANTIDAD, maps = maps):
-    
-
-    
 
     def fetch_goodreads_data_streaming(n_obs: int):
         print(f"Abriendo flujo para {n_obs} observaciones...")

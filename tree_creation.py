@@ -30,15 +30,19 @@ def create_avl_tree(CANTIDAD):
         
 def limited_search (avl_tree, param_for_search, lim_min = None, lim_max = None):
     
-    if lim_min in map[param_for_search].values and lim_max in map[param_for_search].values:
+    if lim_min in maps[param_for_search].values() and lim_max in maps[param_for_search].values():
         pass
-    if lim_min not in map[param_for_search].values:
-        lim_max = max(map[param_for_search].values)
-    if lim_max not in map[param_for_search].values:
-        lim_min = min(map[param_for_search].values)
+    if lim_max not in maps[param_for_search].values() or lim_max is None:
+        lim_max = max(maps[param_for_search].values())
+    if lim_min not in maps[param_for_search].values() or lim_min is None:
+        lim_min = min(maps[param_for_search].values())
         
     
     lim_min = lim_min * map_value[param_for_search]
     lim_max = lim_max * map_value[param_for_search]
     return avl_tree.searching_with_lims(lim_min, lim_max)
 
+tree = create_avl_tree(10000)
+lim_tree = limited_search(tree, "star_rating", 4)
+
+print(lim_tree)

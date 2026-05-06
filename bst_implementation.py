@@ -137,7 +137,7 @@ class BinarySearchTree():
             self.recursive_search_with_lims(currentNode.left, min_limit, max_limit, result)
 
         if lower_ok and upper_ok:
-            result.append(currentNode)
+            result.append(currentNode.name)
 
         if upper_ok:
             self.recursive_search_with_lims(currentNode.right, min_limit, max_limit, result)
